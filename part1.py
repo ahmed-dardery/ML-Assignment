@@ -3,30 +3,49 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-def compute_cost(theta, X, Y):
-    m = len(Y)
-    pred = np.matmul(X, theta)
-    J = np.square(np.subtract(Y, pred))
-
-    return np.sum(J) / (2 * m)
+def predict(x, theta):
+    return np.matmul(x, theta)
 
 
-def next_theta(alpha, theta, X, Y):
-    m = len(Y)
-    pred = np.matmul(X, theta)
-
-    err = np.subtract(pred, Y)
-    dtheta = np.matmul(X.T, err)
-    return theta - (alpha / m) * dtheta
+def normalize(x):
+    mu = np.mean(x, axis=0)
+    sigma = np.std(x, axis=0)
+    return mu, sigma
 
 
-def gradient_descend(iter, alpha, X, Y):
-    theta = np.zeros((X.shape[1], 1))
-    JHistory = [compute_cost(theta, X, Y)]
+def apply_normalization(x, mu, sigma):
+    return np.divide(np.subtract(x, mu), sigma)
+
+
+def add_ones(x):
+    sz = x.shape[0]
+    return np.append(np.ones((sz, 1)).astype(int), x, axis=1)
+
+
+def compute_cost(theta, x, y):
+    m = len(y)
+    y_pred = predict(x, theta)
+    cost = np.square(np.subtract(y, y_pred))
+
+    return np.sum(cost) / (2 * m)
+
+
+def next_theta(alpha, theta, x, y):
+    m = len(y)
+    y_pred = np.matmul(x, theta)
+
+    err = np.subtract(y_pred, y)
+    d_theta = np.matmul(x.T, err)
+    return theta - (alpha / m) * d_theta
+
+
+def gradient_descend(iter, alpha, x, y):
+    theta = np.zeros((x.shape[1], 1))
+    cost_history = [compute_cost(theta, x, y)]
     for _ in range(iter):
-        theta = next_theta(alpha, theta, X, Y)
-        JHistory.append(compute_cost(theta, X, Y))
-    return JHistory, theta
+        theta = next_theta(alpha, theta, x, y)
+        cost_history.append(compute_cost(theta, x, y))
+    return cost_history, theta
 
 
 def get_hypothesis(theta):
@@ -37,39 +56,53 @@ def get_hypothesis(theta):
     return hyp
 
 
-def plot_data(X, Y, theta, xlabel, ylabel):
-    plt.ylabel(ylabel)
-    plt.xlabel(xlabel)
+def plot_data(x, y, y_pred, x_label, y_label, extra_label):
+    plt.ylabel(y_label)
+    plt.xlabel(x_label)
 
-    plt.plot(X[:, 1], np.matmul(X, theta), c='r', label=hypothesis)
-    plt.scatter(X[:, 1], Y, s=0.3, label='Input Data')
+    plt.plot(x, y_pred, c='r', label=extra_label)
+    plt.scatter(x, y, s=0.3, label='Input Data')
     plt.legend()
     plt.show()
 
 
-def plot_cost(JHistory):
+def plot_cost(cost_history):
     plt.ylabel('Cost Function')
     plt.xlabel('Iteration')
-    plt.plot(JHistory, c='orange', label='Cost Function')
+    plt.plot(cost_history, c='orange', label='Cost Function')
     plt.legend()
     plt.show()
 
 
-houseData = pd.read_csv('data/house_data.csv')
-features = ['sqft_living']
-# features = ['grade', 'bathrooms', 'lat', 'sqft_living', 'view']
-X = houseData[features]
-Y = houseData[['price']]
+def main():
+    house_data = pd.read_csv('data/house_data.csv')
+    features = ['sqft_living']
+    features = ['grade', 'bathrooms', 'lat', 'sqft_living', 'view']
+    x_org = house_data[features]
+    y = house_data[['price']]
 
-allM = len(Y)
-Y = Y.to_numpy() / (10 ** 3)
-X = X / (10 ** 3)
-X = np.append(np.ones((allM, 1)).astype(int), X, axis=1)
+    y = y.to_numpy() / (10 ** 3)
 
-JHistory, theta = gradient_descend(100, 0.01, X, Y)
-hypothesis = get_hypothesis(theta)
+    mu, sigma = normalize(x_org)
+    x = add_ones(apply_normalization(x_org, mu, sigma))
+    x_org = add_ones(x_org)
 
-if len(features) == 1:
-    plot_data(X, Y, theta, 'Price in thousands of dollars (1000)', 'Living room area in thousands of sqft (1000)')
+    cost_history, theta = gradient_descend(200, 0.1, x, y)
+    hypothesis = get_hypothesis(theta)
 
-plot_cost(JHistory)
+    print("Normalization:")
+    print("mu:", mu, sep='\n')
+    print()
+    print("sigma:", sigma, sep='\n')
+    print()
+    print("Hypothesis:", hypothesis)
+
+    if len(features) == 1:
+        y_pred = predict(x, theta)
+        plot_data(x_org[:, 1], y, y_pred, 'Price', 'Living room area in thousands of sqft (1000)', hypothesis)
+
+    plot_cost(cost_history)
+
+
+if __name__ == "__main__":
+    main()
