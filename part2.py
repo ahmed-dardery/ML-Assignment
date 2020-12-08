@@ -40,22 +40,22 @@ def predict(x, theta):
 def add_intercepts(x):
     return np.concatenate((np.ones((x.shape[0], 1)), x), axis=1)
 
-
+# if you remove add_intercepts from 45 and 58 and replace them with ``train_x = x , test_data = x`` accuracy gets better
 def train_logistic_regression(x, y, learning_rate, epochs):
-    add_intercepts(x)
-    theta = np.zeros(x.shape[1])
+    train_x = add_intercepts(x)
+    theta = np.zeros(train_x.shape[1])
 
     for i in range(epochs):
         print(calculate_accuracy(x, y, theta))
-        h = sigmoid(x, theta)
-        gradient = calculate_gradient(x, h, y)
+        h = sigmoid(train_x, theta)
+        gradient = calculate_gradient(train_x, h, y)
         theta = update(theta, learning_rate, gradient)
 
     return theta
 
 
-def calculate_accuracy(test_data, targets, theta, target_column='target'):
-    add_intercepts(test_data)
+def calculate_accuracy(x, targets, theta, target_column='target'):
+    test_data = add_intercepts(x)
     prediction = predict(test_data, theta)
     df_prediction = pd.DataFrame(np.around(prediction)).join(targets)
     df_prediction['predicts'] = df_prediction[0].apply(lambda x: 0 if x < 0.5 else 1)
