@@ -43,14 +43,16 @@ def add_intercepts(x):
 def train_logistic_regression(x, y, learning_rate, epochs):
     train_x = add_intercepts(x)
     theta = np.zeros(train_x.shape[1])
+    cost_history = []
 
     for i in range(epochs):
         print(calculate_accuracy(x, y, theta))
         h = predict(train_x, theta)
         gradient = calculate_gradient(train_x, h, y)
         theta = update(theta, learning_rate, gradient)
+        cost_history.append(compute_cost(theta, x, y))
 
-    return theta
+    return theta, cost_history
 
 
 def calculate_accuracy(x, targets, theta, target_column='target'):
@@ -81,6 +83,22 @@ def get_data(file_path_csv, features, target_column='target'):
     return x, y
 
 
+def plot_cost(cost_history):
+    plt.ylabel('Cost Function')
+    plt.xlabel('Iteration')
+    plt.plot(cost_history, c='orange', label='Cost Function')
+    plt.legend()
+    plt.show()
+
+
+def compute_cost(theta, x, y):
+    m = len(y)
+    x = add_intercepts(x)   # Temporarily, intercepts should be always added
+    pred = predict(x, theta)
+    j = y * np.log(pred) + (1 - y) * np.log(1 - pred)
+
+    return np.sum(j) / (-m)
+
 def main():
     heart_data = 'data/heart.csv'
     features = ['trestbps', 'chol', 'thalach', 'oldpeak']
@@ -94,7 +112,9 @@ def main():
     train_x, train_y = normalized_x, y
     test_x, test_y = normalized_x, y
 
-    theta = train_logistic_regression(train_x, train_y, learning_rate, epochs)
+    theta, cost_history = train_logistic_regression(train_x, train_y, learning_rate, epochs)
+
+    plot_cost(cost_history)
 
     print(calculate_accuracy(test_x, test_y, theta, target_column))
 
