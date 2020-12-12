@@ -1,26 +1,10 @@
 import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
+import shared as sh
+
 
 # imported sklearn to compare my output with it ONLY
 from sklearn.linear_model import LogisticRegression
-
-def calculate_gradient(x, h, y):
-    return np.dot(x.T, (h - y)) / y.shape[0]
-
-
-def update(theta, alpha, gradient):
-    return theta - alpha * gradient
-
-
-def normalize(x):
-    mu = np.mean(x, axis=0)
-    sigma = np.std(x, axis=0)
-    return mu, sigma
-
-
-def apply_normalization(x, mu, sigma):
-    return np.divide(np.subtract(x, mu), sigma)
 
 
 def sigmoid(z):
@@ -31,18 +15,22 @@ def predict(x, theta):
     return sigmoid(np.dot(x, theta))
 
 
-def add_intercepts(x):
-    return np.concatenate((np.ones((x.shape[0], 1)), x), axis=1)
+def compute_cost(theta, x, y):
+    m = len(y)
+    pred = predict(x, theta)
+    j = y * np.log(pred) + (1 - y) * np.log(1 - pred)
 
-# if you remove add_intercepts from 45 and 58 and replace them with ``train_x = x , test_data = x`` accuracy gets better
+    return np.sum(j) / (-m)
+
+
 def train_logistic_regression(x, y, learning_rate, epochs):
     theta = np.zeros(x.shape[1])
     cost_history = [compute_cost(theta, x, y)]
     accuracy_history = [calculate_accuracy(x, y, theta)]
     for i in range(epochs):
         h = predict(x, theta)
-        gradient = calculate_gradient(x, h, y)
-        theta = update(theta, learning_rate, gradient)
+        gradient = sh.calculate_gradient(x, h, y)
+        theta = sh.update_theta(theta, learning_rate, gradient)
         accuracy_history.append(calculate_accuracy(x, y, theta))
         cost_history.append(compute_cost(theta, x, y))
 
@@ -69,62 +57,29 @@ def sklearn_accuracy(model, test_x, test_y, target_column='target'):
     return df_prediction.loc[df_prediction[0] == df_prediction[target_column]].shape[0] / df_prediction.shape[0] * 100
 
 
-def get_data(file_path_csv, features, target_column='target'):
-    data = pd.read_csv(file_path_csv)
-    x = data[features]
-    y = data[target_column]
-    return x, y
-
-
-def plot_history(history, c, label):
-    plt.ylabel(label)
-    plt.xlabel('Iteration')
-    plt.plot(history, c=c, label=label)
-    plt.legend()
-    plt.show()
-
-
-def compute_cost(theta, x, y):
-    m = len(y)
-    pred = predict(x, theta)
-    j = y * np.log(pred) + (1 - y) * np.log(1 - pred)
-
-    return np.sum(j) / (-m)
-
-
-def get_hypothesis(theta):
-    th = theta
-    hyp = format(th[0], ".3f")
-    if len(th) > 1:
-        hyp += "".join(" + {v:.3f} * X{i}".format(v=v, i=i + 1) for i, v in enumerate(th[1:]))
-    return hyp
-
-
 def main():
     heart_data = 'data/heart.csv'
     features = ['trestbps', 'chol', 'thalach', 'oldpeak']
     target_column = 'target'
-    learning_rate = 0.01
-    epochs = 10
+    learning_rate = 0.1
+    epochs = 200
 
-    x, y = get_data(heart_data, features, target_column)
+    x, y = sh.get_data(heart_data, features, target_column)
 
-    mu, sigma = normalize(x)
-    x_norm = apply_normalization(x, mu, sigma)
+    mu, sigma = sh.get_normalization(x)
+    x_norm = sh.apply_normalization(x, mu, sigma)
 
-    x_norm = add_intercepts(x_norm)
+    x_norm = sh.add_intercepts(x_norm)
 
     train_x, train_y = x_norm, y
     test_x, test_y = x_norm, y
 
     theta, cost_history, accuracy_history = train_logistic_regression(train_x, train_y, learning_rate, epochs)
 
-    plot_history(cost_history, "orange", "Cost Function")
-    plot_history(accuracy_history, "green", "Accuracy")
+    sh.plot_history(cost_history, "orange", "Cost Function")
+    sh.plot_history(accuracy_history, "green", "Accuracy")
 
-    skmodel = sklearn_model(x, y)
-
-    hypothesis = "S(" + get_hypothesis(theta) + ")"
+    hypothesis = "S(" + sh.get_hypothesis(theta) + ")"
 
     print("Normalization:")
     print("mu:", mu, sep='\n')
@@ -135,7 +90,7 @@ def main():
 
     print()
     print("Our model's accuracy: ", calculate_accuracy(test_x, test_y, theta, target_column))
-    print("Sklearn's accuracy: ", sklearn_accuracy(skmodel, x, y, target_column))
+    print("Sklearn's accuracy: ", sklearn_accuracy(sklearn_model(x, y), x, y, target_column))
 
 
 if __name__ == "__main__":
