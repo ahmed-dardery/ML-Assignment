@@ -5,13 +5,6 @@ import matplotlib.pyplot as plt
 # imported sklearn to compare my output with it ONLY
 from sklearn.linear_model import LogisticRegression
 
-
-def log_likelihood(x, y, weights):
-    theta_x = np.dot(x, weights)
-    ll = np.sum(y * theta_x - np.log(1 + np.exp(theta_x)))
-    return ll
-
-
 def calculate_gradient(x, h, y):
     return np.dot(x.T, (h - y)) / y.shape[0]
 
