@@ -20,12 +20,14 @@ def update(theta, alpha, gradient):
     return theta - alpha * gradient
 
 
-def normalize(df):
-    df_cpy = df.copy()
-    for column in df_cpy.columns:
-        df_cpy[column] = (df_cpy[column] - df_cpy[column].mean()) / df_cpy[column].std()
+def normalize(x):
+    mu = np.mean(x, axis=0)
+    sigma = np.std(x, axis=0)
+    return mu, sigma
 
-    return df_cpy
+
+def apply_normalization(x, mu, sigma):
+    return np.divide(np.subtract(x, mu), sigma)
 
 
 def sigmoid(z):
@@ -99,6 +101,7 @@ def compute_cost(theta, x, y):
 
     return np.sum(j) / (-m)
 
+
 def main():
     heart_data = 'data/heart.csv'
     features = ['trestbps', 'chol', 'thalach', 'oldpeak']
@@ -108,9 +111,10 @@ def main():
 
     x, y = get_data(heart_data, features, target_column)
 
-    normalized_x = normalize(x)
-    train_x, train_y = normalized_x, y
-    test_x, test_y = normalized_x, y
+    mu, sigma = normalize(x)
+    x_norm = apply_normalization(x, mu, sigma)
+    train_x, train_y = x_norm, y
+    test_x, test_y = x_norm, y
 
     theta, cost_history = train_logistic_regression(train_x, train_y, learning_rate, epochs)
 
