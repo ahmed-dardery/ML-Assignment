@@ -6,11 +6,6 @@ import matplotlib.pyplot as plt
 from sklearn.linear_model import LogisticRegression
 
 
-def sigmoid(x, weight):
-    z = np.dot(x, weight)
-    return 1 / (1 + np.exp(-z))
-
-
 def log_likelihood(x, y, weights):
     theta_x = np.dot(x, weights)
     ll = np.sum(y * theta_x - np.log(1 + np.exp(theta_x)))
@@ -33,8 +28,12 @@ def normalize(df):
     return df_cpy
 
 
+def sigmoid(z):
+    return 1 / (1 + np.exp(-z))
+
+
 def predict(x, theta):
-    return sigmoid(x, theta)
+    return sigmoid(np.dot(x, theta))
 
 
 def add_intercepts(x):
@@ -47,7 +46,7 @@ def train_logistic_regression(x, y, learning_rate, epochs):
 
     for i in range(epochs):
         print(calculate_accuracy(x, y, theta))
-        h = sigmoid(train_x, theta)
+        h = predict(train_x, theta)
         gradient = calculate_gradient(train_x, h, y)
         theta = update(theta, learning_rate, gradient)
 
@@ -83,7 +82,7 @@ def get_data(file_path_csv, features, target_column='target'):
 
 
 def main():
-    heart_data = 'heart.csv'
+    heart_data = 'data/heart.csv'
     features = ['trestbps', 'chol', 'thalach', 'oldpeak']
     target_column = 'target'
     learning_rate = 0.01
