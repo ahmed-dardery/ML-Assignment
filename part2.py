@@ -44,16 +44,16 @@ def add_intercepts(x):
 # if you remove add_intercepts from 45 and 58 and replace them with ``train_x = x , test_data = x`` accuracy gets better
 def train_logistic_regression(x, y, learning_rate, epochs):
     theta = np.zeros(x.shape[1])
-    cost_history = []
-
+    cost_history = [compute_cost(theta, x, y)]
+    accuracy_history = [calculate_accuracy(x, y, theta)]
     for i in range(epochs):
-        print(calculate_accuracy(x, y, theta))
         h = predict(x, theta)
         gradient = calculate_gradient(x, h, y)
         theta = update(theta, learning_rate, gradient)
+        accuracy_history.append(calculate_accuracy(x, y, theta))
         cost_history.append(compute_cost(theta, x, y))
 
-    return theta, cost_history
+    return theta, cost_history, accuracy_history
 
 
 def calculate_accuracy(x, targets, theta, target_column='target'):
@@ -83,10 +83,10 @@ def get_data(file_path_csv, features, target_column='target'):
     return x, y
 
 
-def plot_cost(cost_history):
-    plt.ylabel('Cost Function')
+def plot_history(history, c, label):
+    plt.ylabel(label)
     plt.xlabel('Iteration')
-    plt.plot(cost_history, c='orange', label='Cost Function')
+    plt.plot(history, c=c, label=label)
     plt.legend()
     plt.show()
 
@@ -97,6 +97,14 @@ def compute_cost(theta, x, y):
     j = y * np.log(pred) + (1 - y) * np.log(1 - pred)
 
     return np.sum(j) / (-m)
+
+
+def get_hypothesis(theta):
+    th = theta
+    hyp = format(th[0], ".3f")
+    if len(th) > 1:
+        hyp += "".join(" + {v:.3f} * X{i}".format(v=v, i=i + 1) for i, v in enumerate(th[1:]))
+    return hyp
 
 
 def main():
@@ -116,14 +124,25 @@ def main():
     train_x, train_y = x_norm, y
     test_x, test_y = x_norm, y
 
-    theta, cost_history = train_logistic_regression(train_x, train_y, learning_rate, epochs)
+    theta, cost_history, accuracy_history = train_logistic_regression(train_x, train_y, learning_rate, epochs)
 
-    plot_cost(cost_history)
-
-    print(calculate_accuracy(test_x, test_y, theta, target_column))
+    plot_history(cost_history, "orange", "Cost Function")
+    plot_history(accuracy_history, "green", "Accuracy")
 
     skmodel = sklearn_model(x, y)
-    print(sklearn_accuracy(skmodel, x, y, target_column))
+
+    hypothesis = "S(" + get_hypothesis(theta) + ")"
+
+    print("Normalization:")
+    print("mu:", mu, sep='\n')
+    print()
+    print("sigma:", sigma, sep='\n')
+    print()
+    print("Hypothesis: ", hypothesis)
+
+    print()
+    print("Our model's accuracy: ", calculate_accuracy(test_x, test_y, theta, target_column))
+    print("Sklearn's accuracy: ", sklearn_accuracy(skmodel, x, y, target_column))
 
 
 if __name__ == "__main__":
