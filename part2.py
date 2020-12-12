@@ -43,14 +43,13 @@ def add_intercepts(x):
 
 # if you remove add_intercepts from 45 and 58 and replace them with ``train_x = x , test_data = x`` accuracy gets better
 def train_logistic_regression(x, y, learning_rate, epochs):
-    train_x = add_intercepts(x)
-    theta = np.zeros(train_x.shape[1])
+    theta = np.zeros(x.shape[1])
     cost_history = []
 
     for i in range(epochs):
         print(calculate_accuracy(x, y, theta))
-        h = predict(train_x, theta)
-        gradient = calculate_gradient(train_x, h, y)
+        h = predict(x, theta)
+        gradient = calculate_gradient(x, h, y)
         theta = update(theta, learning_rate, gradient)
         cost_history.append(compute_cost(theta, x, y))
 
@@ -58,8 +57,7 @@ def train_logistic_regression(x, y, learning_rate, epochs):
 
 
 def calculate_accuracy(x, targets, theta, target_column='target'):
-    test_data = add_intercepts(x)
-    prediction = predict(test_data, theta)
+    prediction = predict(x, theta)
     df_prediction = pd.DataFrame(np.around(prediction)).join(targets)
     df_prediction['predicts'] = df_prediction[0].apply(lambda x: 0 if x < 0.5 else 1)
     return (df_prediction.loc[df_prediction['predicts'] == df_prediction[target_column]].shape[0] /
@@ -95,7 +93,6 @@ def plot_cost(cost_history):
 
 def compute_cost(theta, x, y):
     m = len(y)
-    x = add_intercepts(x)   # Temporarily, intercepts should be always added
     pred = predict(x, theta)
     j = y * np.log(pred) + (1 - y) * np.log(1 - pred)
 
@@ -113,6 +110,9 @@ def main():
 
     mu, sigma = normalize(x)
     x_norm = apply_normalization(x, mu, sigma)
+
+    x_norm = add_intercepts(x_norm)
+
     train_x, train_y = x_norm, y
     test_x, test_y = x_norm, y
 
