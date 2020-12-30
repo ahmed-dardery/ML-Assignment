@@ -30,16 +30,6 @@ def gradient_descend(iter, alpha, x, y):
     return theta, cost_history
 
 
-def plot_data(x, y, y_pred, x_label, y_label, extra_label):
-    plt.ylabel(y_label)
-    plt.xlabel(x_label)
-
-    plt.plot(x, y_pred, c='r', label=extra_label)
-    plt.scatter(x, y, s=0.3, label='Input Data')
-    plt.legend()
-    plt.show()
-
-
 def sklearn_model(x, y):
     model = LinearRegression(fit_intercept=True)
     model.fit(x, y)
@@ -54,7 +44,7 @@ def sklearn_error(model, test_x, test_y):
 def main():
     heart_data = 'data/house_data.csv'
     features = ['sqft_living']
-    features = ['grade', 'bathrooms', 'lat', 'sqft_living', 'view']
+    # features = ['grade', 'bathrooms', 'lat', 'sqft_living', 'view']
     target_column = 'price'
     learning_rate = 0.1
     epochs = 200
@@ -79,8 +69,10 @@ def main():
 
     if len(features) == 1:
         y_pred = predict(x, theta)
-        plot_data(x_org[:, 1], y, y_pred, 'Price', 'Living room area in thousands of sqft (1000)', hypothesis)
-
+        sh.plot_data(x_org[:, 1], y, y_pred, 'Living room area in thousands of sqft (1000)', 'Price', hypothesis)
+    else:
+        y_pred = predict(x, theta)
+        sh.plot_data(y_pred, y, y_pred, 'Predicted Price', 'Price', "Hypothesis", "Input Prediction")
     print()
     print("Our model's error: ", compute_cost(theta, x, y))
     print("Sklearn's error: ", sklearn_error(sklearn_model(x, y), x, y))

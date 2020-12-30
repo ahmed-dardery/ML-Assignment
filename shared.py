@@ -46,3 +46,13 @@ def get_hypothesis(theta):
     if len(th) > 1:
         hyp += "".join(" + {v:.3f} * X{i}".format(v=v, i=i + 1) for i, v in enumerate(th[1:]))
     return hyp
+
+
+def plot_data(x, y, y_pred, x_label, y_label, line_label, scatter_label="Input Data"):
+    plt.ylabel(y_label)
+    plt.xlabel(x_label)
+
+    plt.plot(x, y_pred, c='r', label=line_label)
+    plt.scatter(x, y, s=0.3, label=scatter_label)
+    plt.legend()
+    plt.show()

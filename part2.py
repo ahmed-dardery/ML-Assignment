@@ -88,6 +88,9 @@ def main():
     print()
     print("Hypothesis: ", hypothesis)
 
+    y_pred = predict(x_norm, theta)
+    sh.plot_data(y_pred, y, y_pred, 'Predicted Price', 'Price', "Hypothesis", "Input Prediction")
+
     print()
     print("Our model's accuracy: ", calculate_accuracy(test_x, test_y, theta, target_column))
     print("Sklearn's accuracy: ", sklearn_accuracy(sklearn_model(x, y), x, y, target_column))
