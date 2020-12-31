@@ -1,0 +1,14 @@
+no,sunny,high,weak
+no,sunny,high,strong
+yes,overcast,high,weak
+yes,rain,high,weak
+yes,rain,normal,weak
+no,rain,normal,strong
+yes,overcast,normal,strong
+no,sunny,high,weak
+yes,sunny,normal,weak
+yes,rain,normal,weak
+yes,sunny,normal,strong
+yes,overcast,high,strong
+yes,overcast,normal,weak
+no,rain,high,strong

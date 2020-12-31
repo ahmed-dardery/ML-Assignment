@@ -2,8 +2,20 @@ import numpy as np
 import pandas as pd
 
 
+class TreeNode:
+    def __init__(self, lbl):
+        self.label = lbl
+        self.nxt = {}
+
+    def predict(self, x):
+        go_next = self.nxt[x[self.label]]
+        if not isinstance(go_next, TreeNode):
+            return go_next
+        return go_next.predict(x)
+
+
 def split_to_train_test(df, train_ratio):
-    train = df.sample(frac=train_ratio)
+    train = df.sample(frac=train_ratio, random_state=5)
     test = df.drop(train.index)
     return train, test
 
@@ -17,8 +29,8 @@ def calculate_entropy(y):
     return entropy_value
 
 
-def calculate_information_gain(x, y):
-    children, details = np.unique(x, return_inverse=True)
+def calculate_information_gain(feat, y):
+    children, details = np.unique(feat, return_inverse=True)
 
     avg = 0
     for j in range(len(children)):
@@ -29,24 +41,26 @@ def calculate_information_gain(x, y):
 
     return calculate_entropy(y) - avg
 
-def recurse(df, parent):
-    pass
 
-def generate_decision_tree(df):
-    parent = None
-    return recurse(df, parent)
+def recurse(x, y, features):
+    unique, cnt = np.unique(y, return_counts=True)
+    if len(unique) <= 1:
+        return unique[0]
+    if len(features) == 0:
+        return unique[np.argmax(cnt)]
+
+    gains = [calculate_information_gain(x[feat], y) for feat in features]
+    optimal = features[np.argmax(gains)]
+    node = TreeNode(optimal)
+    for choice in np.unique(x[optimal]):
+        subset = x[optimal] == choice
+        node.nxt[choice] = recurse(x[subset], y[subset], [v for v in features if v != optimal])
+
+    return node
 
 
-def solve(df):
-    print(df)
-    n, m = df.shape
-    for i in range(1, m):
-        print(calculate_information_gain(df.iloc[:, i], df.iloc[:, 0]))
-        # cur_col_y = cur_col[cur_col[i] == 'y']
-        # yes = cur_col_y[0].isin([POS]).sum(axis=0)
-        # no = n - yes
-
-    # print(df.loc[df.iloc[:, 0] == NEG])
+def generate_decision_tree(x, y):
+    return recurse(x, y, features=x.columns.tolist())
 
 
 # Fills missing data points by majority of the row
@@ -57,11 +71,29 @@ def fill_in_unknowns(df):
         x.iloc[:, i].replace('?', 'y' if replacement[i] else 'n', inplace=True)
 
 
+def calculate_accuracy(tree, df):
+    total = 0
+    for i in range(len(df)):
+        if tree.predict(df.iloc[i, 1:]) == df.iloc[i, 0]:
+            total += 1
+    return total / len(df)
+
+
+def testing():
+    train = pd.read_csv('part1_data/lecture.txt', header=None)
+    tree = generate_decision_tree(train.iloc[:, 1:], train.iloc[:, 0])
+    print("Training accuracy: ", calculate_accuracy(tree, train))
+
+
 def main():
     df = pd.read_csv('part1_data/house-votes-84.data.txt', header=None)
-    train, test = split_to_train_test(df, 0.01)
+    train, test = split_to_train_test(df, 0.25)
     fill_in_unknowns(train)
-    solve(train)
+    fill_in_unknowns(test)
+    tree = generate_decision_tree(train.iloc[:, 1:], train.iloc[:, 0])
+
+    print("Training accuracy: ", calculate_accuracy(tree, train))
+    print("Testing  accuracy: ", calculate_accuracy(tree, test))
 
 
 if __name__ == '__main__':
