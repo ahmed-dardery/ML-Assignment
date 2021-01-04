@@ -8,6 +8,9 @@ class TreeNode:
         self.nxt = {}
 
     def predict(self, x):
+        if x[self.label] not in self.nxt:
+            return 'unpredictable'
+
         go_next = self.nxt[x[self.label]]
         if not isinstance(go_next, TreeNode):
             return go_next
@@ -15,7 +18,7 @@ class TreeNode:
 
 
 def split_to_train_test(df, train_ratio):
-    train = df.sample(frac=train_ratio, random_state=5)
+    train = df.sample(frac=train_ratio)
     test = df.drop(train.index)
     return train, test
 
@@ -64,11 +67,15 @@ def generate_decision_tree(x, y):
 
 
 # Fills missing data points by majority of the row
-def fill_in_unknowns(df):
+def fill_in_unknowns(df, majority):
     x = df.iloc[:, 1:]
-    replacement = (x.isin(['y']).sum(axis=0) >= x.isin(['n']).sum(axis=0)).tolist()
     for i in range(x.shape[1]):
-        x.iloc[:, i].replace('?', 'y' if replacement[i] else 'n', inplace=True)
+        x.iloc[:, i].replace('?', 'y' if majority[i] else 'n', inplace=True)
+
+
+def find_majority(df):
+    x = df.iloc[:, 1:]
+    return (x.isin(['y']).sum(axis=0) >= x.isin(['n']).sum(axis=0)).tolist()
 
 
 def calculate_accuracy(tree, df):
@@ -88,8 +95,11 @@ def testing():
 def main():
     df = pd.read_csv('part1_data/house-votes-84.data.txt', header=None)
     train, test = split_to_train_test(df, 0.25)
-    fill_in_unknowns(train)
-    fill_in_unknowns(test)
+    # majority = find_majority(df)
+    # fill_in_unknowns(df, majority)
+    majority = find_majority(train)
+    fill_in_unknowns(train, majority)
+    fill_in_unknowns(test, majority)
     tree = generate_decision_tree(train.iloc[:, 1:], train.iloc[:, 0])
 
     print("Training accuracy: ", calculate_accuracy(tree, train))
