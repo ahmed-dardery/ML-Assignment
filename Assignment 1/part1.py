@@ -44,15 +44,15 @@ def sklearn_error(model, test_x, test_y):
 def main():
     heart_data = 'data/house_data.csv'
     features = ['sqft_living']
-    # features = ['grade', 'bathrooms', 'lat', 'sqft_living', 'view']
+    #features = ['grade', 'bathrooms', 'lat', 'sqft_living', 'view']
     target_column = 'price'
-    learning_rate = 0.1
-    epochs = 200
+    learning_rate = 0.5
+    epochs = 100
 
     x_org, y = sh.get_data(heart_data, features, target_column)
 
     y = y.to_numpy() / (10 ** 3)
-
+    #y = y.to_numpy()
     mu, sigma = sh.get_normalization(x_org)
     x = sh.add_intercepts(sh.apply_normalization(x_org, mu, sigma))
     x_org = sh.add_intercepts(x_org)
