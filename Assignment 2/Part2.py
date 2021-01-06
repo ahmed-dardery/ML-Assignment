@@ -24,6 +24,7 @@ We have to maximize the margin which is 2/||w||
 """
 import numpy as np
 import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
 import pandas as pd
 
 
@@ -31,12 +32,12 @@ def get_data(file_path_csv, features, target_column='target'):
     data = pd.read_csv(file_path_csv)
     x = data[features]
     y = data[target_column]
-    return x, y
+    return x, y, data
 
 
 # WX + b
 def function(x, w, b):
-    return np.dot(x, w) + b
+    return np.dot(x, w) - b
 
 
 def predict(x, w, b):
@@ -45,7 +46,7 @@ def predict(x, w, b):
 
 # Takes y {0,1} and returns y {-1,1}
 def convert_y(y):
-    return np.where(y < 0, -1, 1)
+    return y * 2 - 1
 
 
 '''
@@ -62,13 +63,21 @@ def svm(x, y, alpha, lmbda, epochs):
     w = np.zeros(x.shape[1])
     b = 0
     for _ in range(epochs):
-        for i, curr in enumerate(x):
+        for i, curr in enumerate(x.values):
             if y[i] * function(curr, w, b) >= 1:
                 w = w - alpha * 2 * lmbda * w
             else:
-                w = w + alpha * (np.dot(curr, y[i]) - 2 * lmbda * w)
+                w = w - alpha * (2 * lmbda * w - np.dot(curr, y[i]))
                 b = b - alpha * y[i]
-    return x, w, b
+    return w, b
+
+
+def test(x, y, w, b):
+    correct = 0
+    for i, curr in enumerate(x.values):
+        if y[i] == predict(curr, w, b):
+            correct += 1
+    return correct
 
 
 def visualize_features(X, features, y):
@@ -84,8 +93,7 @@ def main():
                 'thal']
     target_column = 'target'
 
-    x, y = get_data(heart_data, features, target_column)
-
+    train_features = ['sex', 'exang', 'ca', 'fbs']
     # visualize different combination to see the best
     # visualize_features(x, ['age', 'trestbps'], y)
     # visualize_features(x, ['age', 'sex'], y)  # some how acceptable
@@ -95,12 +103,42 @@ def main():
     # visualize_features(x, ['thalach', 'age'], y)
     # visualize_features(x, ['sex', 'oldpeak'], y)
     # visualize_features(x, ['exang', 'oldpeak'], y)
-
-
-
+    # visualize_features(x, ['thalach', 'oldpeak'], y)
     learning_rate = 0.01
-    lmbda = 0.001
-    epochs = 200
+    lmbda = 0.01
+    epochs = 50
+    best = -1
+    bestf = []
+    x, y, data = get_data(heart_data, features, target_column)
+    y = convert_y(y)
+    # for i in range(1, 2 ** len(features)):
+    #     curr = i
+    #     idx = 0
+    #     f = []
+    #     if i % 10 == 0:
+    #         print("Iter: " + str(i))
+    #         print("Best: " + str(best))
+    #         print("BestF: " + str(bestf))
+    #
+    #     while (curr):
+    #         if curr & 1 == 1:
+    #             f.append(features[idx])
+    #         idx += 1
+    #         curr >>= 1
+    #
+    #     w, b = svm(data[f], y, learning_rate, lmbda, epochs)
+    #
+    #     acc = test(data[f], y, w, b)
+    #     if acc > best:
+    #         best = acc
+    #         bestf = f
+
+    print(best)
+    print(bestf)
+    # print(w)
+    # print(b)
+    # print(x.shape)
+
 
 if __name__ == "__main__":
     main()
