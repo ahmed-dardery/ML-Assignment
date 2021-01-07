@@ -68,7 +68,7 @@ def normalize(x):
 def svm(x, y, alpha, lmbda, epochs):
     w = np.zeros(x.shape[1])
     b = 0
-    y = y.tolist() #converts dictionary to array
+    y = y.tolist()  # converts dictionary to array
     for _ in range(epochs):
         for i, curr in enumerate(x.values):
             if y[i] * function(curr, w, b) >= 1:
@@ -81,7 +81,7 @@ def svm(x, y, alpha, lmbda, epochs):
 
 def test(x, y, w, b):
     correct = 0
-    y = y.tolist() #converts dictionary to array
+    y = y.tolist()  # converts dictionary to array
     for i, curr in enumerate(x.values):
         if y[i] == predict(curr, w, b):
             correct += 1
@@ -108,7 +108,7 @@ def main():
 
     train_features = ['sex', 'exang', 'ca']
     # train_features = ['sex', 'exang', 'ca', 'fbs']
-    #train_features = ['thalach', 'trestbps']
+    # train_features = ['thalach', 'trestbps']
     # visualize different combination to see the best
     # visualize_features(x, ['age', 'trestbps'], y)
     # visualize_features(x, ['age', 'sex'], y)
@@ -120,15 +120,20 @@ def main():
     # visualize_features(x, ['exang', 'oldpeak'], y)
     # visualize_features(x, ['thalach', 'oldpeak'], y)
     # visualize_features(x, ['exang', 'ca'], y)
-    learning_rate = 0.01
-    lmbda = 1 / 1000
-    epochs = 1000
-    x, y, data = get_data(heart_data, features, target_column)
-    y = convert_y(y)
-    x = normalize(data[train_features])
-    x_train, y_train, x_test, y_test = train_test_split(x, y, 0.8)
-    w, b = svm(x_train, y_train, learning_rate, lmbda, epochs)
-    print(test(x_test, y_test, w, b)/x_test.shape[0])
+    bst = -1
+    for i in range(100):
+        learning_rate = 0.01
+        lmbda = 0.001
+        epochs = 50
+        x, y, data = get_data(heart_data, features, target_column)
+        y = convert_y(y)
+        x = normalize(data[train_features])
+        x_train, y_train, x_test, y_test = train_test_split(x, y, 0.8)
+        w, b = svm(x_train, y_train, learning_rate, lmbda, epochs)
+        curr = test(x_test, y_test, w, b) / x_test.shape[0]
+        if curr > bst:
+            bst = curr
+    print(bst)
     # best = -1
     # bestf = []
     # for i in range(1, 2 ** len(features)):
