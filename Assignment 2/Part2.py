@@ -37,7 +37,7 @@ def get_data(file_path_csv, features, target_column='target'):
 
 # WX + b
 def function(x, w, b):
-    return np.dot(x, w) - b
+    return np.dot(x, w) + b
 
 
 def predict(x, w, b):
@@ -47,6 +47,12 @@ def predict(x, w, b):
 # Takes y {0,1} and returns y {-1,1}
 def convert_y(y):
     return y * 2 - 1
+
+
+def normalize(x):
+    mu = np.mean(x, axis=0)
+    sigma = np.std(x, axis=0)
+    return np.divide(np.subtract(x, mu), sigma)
 
 
 '''
@@ -62,18 +68,20 @@ def convert_y(y):
 def svm(x, y, alpha, lmbda, epochs):
     w = np.zeros(x.shape[1])
     b = 0
+    y = y.tolist() #converts dictionary to array
     for _ in range(epochs):
         for i, curr in enumerate(x.values):
             if y[i] * function(curr, w, b) >= 1:
-                w = w - alpha * 2 * lmbda * w
+                w -= alpha * 2 * lmbda * w
             else:
-                w = w - alpha * (2 * lmbda * w - np.dot(curr, y[i]))
-                b = b - alpha * y[i]
+                w += alpha * (np.dot(curr, y[i]) - 2 * lmbda * w)
+                b += alpha * y[i]
     return w, b
 
 
 def test(x, y, w, b):
     correct = 0
+    y = y.tolist() #converts dictionary to array
     for i, curr in enumerate(x.values):
         if y[i] == predict(curr, w, b):
             correct += 1
@@ -87,16 +95,23 @@ def visualize_features(X, features, y):
     plt.show()
 
 
+def train_test_split(x, y, ratio):
+    msk = np.random.rand(len(x)) < ratio
+    return x[msk], y[msk], x[~msk], y[~msk]
+
+
 def main():
     heart_data = 'part2_data/heart.csv'
     features = ['age', 'sex', 'cp', 'trestbps', 'chol', 'fbs', 'restecg', 'thalach', 'exang', 'oldpeak', 'slope', 'ca',
                 'thal']
     target_column = 'target'
 
-    train_features = ['sex', 'exang', 'ca', 'fbs']
+    train_features = ['sex', 'exang', 'ca']
+    # train_features = ['sex', 'exang', 'ca', 'fbs']
+    #train_features = ['thalach', 'trestbps']
     # visualize different combination to see the best
     # visualize_features(x, ['age', 'trestbps'], y)
-    # visualize_features(x, ['age', 'sex'], y)  # some how acceptable
+    # visualize_features(x, ['age', 'sex'], y)
     # visualize_features(x, ['age', 'cp'], y)
     # visualize_features(x, ['age', 'chol'], y)
     # visualize_features(x, ['age', 'chol'], y)
@@ -104,13 +119,18 @@ def main():
     # visualize_features(x, ['sex', 'oldpeak'], y)
     # visualize_features(x, ['exang', 'oldpeak'], y)
     # visualize_features(x, ['thalach', 'oldpeak'], y)
+    # visualize_features(x, ['exang', 'ca'], y)
     learning_rate = 0.01
-    lmbda = 0.01
-    epochs = 50
-    best = -1
-    bestf = []
+    lmbda = 1 / 1000
+    epochs = 1000
     x, y, data = get_data(heart_data, features, target_column)
     y = convert_y(y)
+    x = normalize(data[train_features])
+    x_train, y_train, x_test, y_test = train_test_split(x, y, 0.8)
+    w, b = svm(x_train, y_train, learning_rate, lmbda, epochs)
+    print(test(x_test, y_test, w, b)/x_test.shape[0])
+    # best = -1
+    # bestf = []
     # for i in range(1, 2 ** len(features)):
     #     curr = i
     #     idx = 0
@@ -133,8 +153,8 @@ def main():
     #         best = acc
     #         bestf = f
 
-    print(best)
-    print(bestf)
+    # print(best)
+    # print(bestf)
     # print(w)
     # print(b)
     # print(x.shape)
