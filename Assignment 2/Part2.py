@@ -24,7 +24,6 @@ We have to maximize the margin which is 2/||w||
 """
 import numpy as np
 import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
 import pandas as pd
 
 
@@ -36,14 +35,12 @@ def get_data(file_path_csv, features, target_column='target'):
 
 
 # WX + b
-def function(x, w, b):
-    b = 0
-    return np.dot(x, w) + b
+def function(x, w):
+    return np.dot(x, w)
 
 
-def predict(x, w, b):
-    b = 0
-    return -1 if function(x, w, b) < 0 else 1
+def predict(x, w):
+    return -1 if function(x, w) < 0 else 1
 
 
 # Takes y {0,1} and returns y {-1,1}
@@ -69,22 +66,26 @@ def normalize(x):
 
 def svm(x, y, alpha, lmbda, epochs):
     w = np.zeros(x.shape[1])
-    b = 0
     y = y.tolist()  # converts dictionary to array
+    cost_history = []
     for _ in range(epochs):
-        for i, curr in enumerate(x.values):
-            if y[i] * function(curr, w, b) >= 1:
+        cost = 0
+        for i, curr in enumerate(x):
+            expr = y[i] * function(curr, w)
+            if expr >= 1:
                 w -= alpha * 2 * lmbda * w
             else:
                 w += alpha * (np.dot(curr, y[i]) - 2 * lmbda * w)
-                b += alpha * y[i]
-    return w,b
+                cost += 1 - expr
 
-def test(x, y, w, b):
+        cost_history.append(cost)
+    return w, cost_history
+
+def test(x, y, w):
     correct = 0
     y = y.tolist()  # converts dictionary to array
-    for i, curr in enumerate(x.values):
-        if y[i] == predict(curr, w, b):
+    for i, curr in enumerate(x):
+        if y[i] == predict(curr, w):
             correct += 1
     return correct
 
@@ -118,32 +119,49 @@ def visualize_some_features(x, y):
     visualize_features(x, ['fbs', 'exang'], y)
 
 
+def plot_history(history, c, label):
+    plt.ylabel(label)
+    plt.xlabel('Iteration')
+    plt.plot(history, c=c, label=label)
+    plt.legend()
+    plt.show()
+
+
 def main():
     heart_data = 'part2_data/heart.csv'
     features = ['age', 'sex', 'cp', 'trestbps', 'chol', 'fbs', 'restecg', 'thalach', 'exang', 'oldpeak', 'slope', 'ca',
                 'thal']
     target_column = 'target'
     x, y, data = get_data(heart_data, features, target_column)
-    visualize_some_features(x, y)
+    # visualize_some_features(x, y)
 
+    # train_features = ['age', 'chol']
+    # train_features = ['age', 'thalach', 'chol']
     train_features = ['sex', 'exang', 'ca']
+
     y = convert_y(y)
     x = normalize(data[train_features])
 
+    x = np.concatenate((x, np.ones((x.shape[0], 1))), axis=1)
     bst = -1
-    learning_rate = 0.01
+    learning_rate = 0.004
     lmbda = 0.001
     epochs = 50
     avg = 0
     loop = 100
+    best_history = []
+    cnt = 0
     for i in range(loop):
         x_train, y_train, x_test, y_test = train_test_split(x, y, 0.8)
-        w, b = svm(x_train, y_train, learning_rate, lmbda, epochs)
-        curr = test(x_test, y_test, w, b) / x_test.shape[0]
+        w, cost_history = svm(x_train, y_train, learning_rate, lmbda, epochs)
+        curr = test(x_test, y_test, w) / x_test.shape[0]
         avg += curr
         if curr > bst:
+            cnt+=1
+            best_history = cost_history
             bst = curr
 
+    plot_history(best_history, 'orange', 'Cost History')
     print("Best result:", bst)
     print("Average:", avg / loop)
 
