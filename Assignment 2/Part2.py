@@ -37,10 +37,12 @@ def get_data(file_path_csv, features, target_column='target'):
 
 # WX + b
 def function(x, w, b):
+    b = 0
     return np.dot(x, w) + b
 
 
 def predict(x, w, b):
+    b = 0
     return -1 if function(x, w, b) < 0 else 1
 
 
@@ -76,8 +78,7 @@ def svm(x, y, alpha, lmbda, epochs):
             else:
                 w += alpha * (np.dot(curr, y[i]) - 2 * lmbda * w)
                 b += alpha * y[i]
-    return w, b
-
+    return w,b
 
 def test(x, y, w, b):
     correct = 0
@@ -88,8 +89,8 @@ def test(x, y, w, b):
     return correct
 
 
-def visualize_features(X, features, y):
-    plt.scatter(X[features[0]], X[features[1]], marker='o', c=y)
+def visualize_features(x, features, y):
+    plt.scatter(x[features[0]], x[features[1]], marker='o', c=y)
     plt.xlabel(features[0])
     plt.ylabel(features[1])
     plt.show()
@@ -100,16 +101,8 @@ def train_test_split(x, y, ratio):
     return x[msk], y[msk], x[~msk], y[~msk]
 
 
-def main():
-    heart_data = 'part2_data/heart.csv'
-    features = ['age', 'sex', 'cp', 'trestbps', 'chol', 'fbs', 'restecg', 'thalach', 'exang', 'oldpeak', 'slope', 'ca',
-                'thal']
-    target_column = 'target'
-
-    train_features = ['sex', 'exang', 'ca']
-    # train_features = ['sex', 'exang', 'ca', 'fbs']
-    # train_features = ['thalach', 'trestbps']
-    # visualize different combination to see the best
+# visualize different combination to see the best
+def visualize_some_features(x, y):
     # visualize_features(x, ['age', 'trestbps'], y)
     # visualize_features(x, ['age', 'sex'], y)
     # visualize_features(x, ['age', 'cp'], y)
@@ -119,50 +112,40 @@ def main():
     # visualize_features(x, ['sex', 'oldpeak'], y)
     # visualize_features(x, ['exang', 'oldpeak'], y)
     # visualize_features(x, ['thalach', 'oldpeak'], y)
-    # visualize_features(x, ['exang', 'ca'], y)
+    visualize_features(x, ['exang', 'ca'], y)
+    visualize_features(x, ['sex', 'ca'], y)
+    visualize_features(x, ['sex', 'exang'], y)
+    visualize_features(x, ['fbs', 'exang'], y)
+
+
+def main():
+    heart_data = 'part2_data/heart.csv'
+    features = ['age', 'sex', 'cp', 'trestbps', 'chol', 'fbs', 'restecg', 'thalach', 'exang', 'oldpeak', 'slope', 'ca',
+                'thal']
+    target_column = 'target'
+    x, y, data = get_data(heart_data, features, target_column)
+    visualize_some_features(x, y)
+
+    train_features = ['sex', 'exang', 'ca']
+    y = convert_y(y)
+    x = normalize(data[train_features])
+
     bst = -1
-    for i in range(100):
-        learning_rate = 0.01
-        lmbda = 0.001
-        epochs = 50
-        x, y, data = get_data(heart_data, features, target_column)
-        y = convert_y(y)
-        x = normalize(data[train_features])
+    learning_rate = 0.01
+    lmbda = 0.001
+    epochs = 50
+    avg = 0
+    loop = 100
+    for i in range(loop):
         x_train, y_train, x_test, y_test = train_test_split(x, y, 0.8)
         w, b = svm(x_train, y_train, learning_rate, lmbda, epochs)
         curr = test(x_test, y_test, w, b) / x_test.shape[0]
+        avg += curr
         if curr > bst:
             bst = curr
-    print(bst)
-    # best = -1
-    # bestf = []
-    # for i in range(1, 2 ** len(features)):
-    #     curr = i
-    #     idx = 0
-    #     f = []
-    #     if i % 10 == 0:
-    #         print("Iter: " + str(i))
-    #         print("Best: " + str(best))
-    #         print("BestF: " + str(bestf))
-    #
-    #     while (curr):
-    #         if curr & 1 == 1:
-    #             f.append(features[idx])
-    #         idx += 1
-    #         curr >>= 1
-    #
-    #     w, b = svm(data[f], y, learning_rate, lmbda, epochs)
-    #
-    #     acc = test(data[f], y, w, b)
-    #     if acc > best:
-    #         best = acc
-    #         bestf = f
 
-    # print(best)
-    # print(bestf)
-    # print(w)
-    # print(b)
-    # print(x.shape)
+    print("Best result:", bst)
+    print("Average:", avg / loop)
 
 
 if __name__ == "__main__":

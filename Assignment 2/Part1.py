@@ -49,9 +49,9 @@ def calculate_information_gain(feat, y):
 def recurse(x, y, features):
     unique, cnt = np.unique(y, return_counts=True)
     if len(unique) <= 1:
-        return unique[0], 0
+        return unique[0], 1
     if len(features) == 0:
-        return unique[np.argmax(cnt)], 0
+        return unique[np.argmax(cnt)], 1
 
     gains = [calculate_information_gain(x[feat], y) for feat in features]
     optimal = features[np.argmax(gains)]
@@ -88,13 +88,6 @@ def calculate_accuracy(tree, df):
             total += 1
     return total / (len(df) * 1.0)
 
-def calculate_size(tree):
-    print(tree.label)
-    for node in tree.nxt:
-        #print(node)
-        calculate_size(node)
-
-
 def testing():
     train = pd.read_csv('part1_data/lecture.txt', header=None)
     tree = generate_decision_tree(train.iloc[:, 1:], train.iloc[:, 0])
@@ -116,8 +109,8 @@ def exercising(df, train_ratio, iterations):
         test_accuracies.append(calculate_accuracy(tree, test))
         tree_sizes.append(tree_size)
 
-        print("Training accuracy(" + str(train_ratio) + ": " + str(train_accuracies[i]))
-        print("Testing  accuracy(" + str(1 - train_ratio) + ": " + str(test_accuracies[i]))
+        print("Training accuracy(" + str(train_ratio) + "): " + str(train_accuracies[i]))
+        print("Testing  accuracy(" + str(1 - train_ratio) + "): " + str(test_accuracies[i]))
         print("Tree size: " + str(tree_size))
 
     return train_accuracies, test_accuracies, tree_sizes
