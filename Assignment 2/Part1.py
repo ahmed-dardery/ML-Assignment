@@ -93,16 +93,17 @@ def testing():
     tree = generate_decision_tree(train.iloc[:, 1:], train.iloc[:, 0])
     print("Training accuracy: ", calculate_accuracy(tree, train))
 
-def exercising(df, train_ratio, iterations):
+def exercising(df, train_ratio, iterations, fill_in=False):
     train_accuracies = []
     test_accuracies = []
     tree_sizes = []
 
     for i in range(iterations):
         train, test = split_to_train_test(df, train_ratio)
-        majority = find_majority(train)
-        fill_in_unknowns(train, majority)
-        fill_in_unknowns(test, majority)
+        if fill_in:
+            majority = find_majority(train)
+            fill_in_unknowns(train, majority)
+            fill_in_unknowns(test, majority)
         tree, tree_size = generate_decision_tree(train.iloc[:, 1:], train.iloc[:, 0])
 
         train_accuracies.append(calculate_accuracy(tree, train))
@@ -125,7 +126,7 @@ def main():
     print("Run 5 times: training Ratios(0.25, 0.30, 0.40, 0.50, 0.60,0.07)\n")
     for i in range(ratios_size):
         print("For Train Ratio(" + str(ratios[i]) + ")\n")
-        train_accuracies, test_accuracies, tree_sizes = exercising(df, ratios[i], iterations)
+        train_accuracies, test_accuracies, tree_sizes = exercising(df, ratios[i], iterations, fill_in=False if i == 0 else True)
 
         print("\nMin Train accuracy: " + str(np.min(train_accuracies)) +
               "\nMax Train accuracy: " + str(np.max(train_accuracies)) +
