@@ -124,7 +124,7 @@ def exercising(df, train_ratio, iterations):
 
 
 def main():
-    df = pd.read_csv('house-votes-84.data.txt', header=None)
+    df = pd.read_csv('part1_data/house-votes-84.data.txt', header=None)
     iterations = 5
     ratios = [0.25, 0.30, 0.40, 0.50, 0.60, 0.70]
     ratios_size = len(ratios)
