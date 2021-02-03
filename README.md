@@ -1,13 +1,11 @@
-# ML-Assignment
-## Prerequisites
-* pandas
-* numpy
-* matplotlib
-* sklearn
+# Assignment 1
 
-## Notes
-* We have used Sklearn to compare outputs only.
+This holds the implementation of Linear Regression, multivariable linear regression and Logistic Regression from scratch.
 
-## Team Members
-Ahmed Nasr El Dardery	20170034	CS_DS_G1
-Belal Hamdy Ezzat		20170077	CS_DS_G1
+# Assignment 2
+
+This holds the implementation of Decision Tree and Support Vector Machine from scratch.
+
+# Assignment 3
+
+This holds an application (not from scratch) of Convolution Neural Network to identify numbers from images.
